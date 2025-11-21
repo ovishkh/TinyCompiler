@@ -6,6 +6,12 @@ Thank you for your interest in contributing to TinyCompiler! We welcome contribu
 **Live Demo:** https://TinyCompiler.ovishekh.com/  
 **Author:** Ovi Shekh (ovishekh.com)
 
+**Special Thanks:**
+- Md. Rashedul Alam
+- James Kyle
+- Gates Smasher
+- Corrado Böhm
+
 ## Code of Conduct
 
 - Be respectful and inclusive

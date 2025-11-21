@@ -7,7 +7,13 @@
  * Live Demo: https://TinyCompiler.ovishekh.com/
  * 
  * Author: Ovi Shekh
- * Based on: (https://craftinginterpreters.com/)
+ * 
+ * Special Thanks:
+ * - Md. Rashedul Alam
+ * - James Kyle
+ * - Gates Smasher
+ * - Corrado Böhm
+ * 
  * License: MIT
  *  
  * TTTTTTTTTTTTTTTTTTTTTTTIIIIIIIIIINNNNNNNN        NNNNNNNNYYYYYYY       YYYYYYY

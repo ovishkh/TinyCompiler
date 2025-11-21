@@ -415,9 +415,11 @@ You are free to use, modify, and distribute this project with or without attribu
 
 **Created by:** Ovi Shekh ([ovishekh.com](https://ovishekh.com))
 
-**Based on:** "The Super Tiny Compiler" by James Kyle ([thejameskyle.com](https://thejameskyle.com))
-
-**Special thanks** to the compiler design community and educators who continue to make compiler concepts accessible to learners.
+**Special Thanks:**
+- [Md. Rashedul Alam](https://github.com/rashedul) - For guidance and support
+- [James Kyle](https://github.com/jamiebuilds) - For compiler design inspiration
+- [Gates Smasher](https://github.com/gates-smasher) - For valuable contributions
+- [Corrado Böhm](https://github.com/corrado-bohm) - For theoretical foundations
 
 ---
 
