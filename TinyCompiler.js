@@ -85,14 +85,47 @@
  * Most compilers break down into three primary stages: Parsing, Transformation,
  * and Code Generation
  *
- * 1. *Parsing* is taking raw code and turning it into a more abstract
- *    representation of the code.
+ * PHASE 1: PARSING (Lexical + Syntactic Analysis)
+ * ================================================
+ * Takes raw source code and converts it into an Abstract Syntax Tree (AST).
+ * 
+ * Sub-phases:
+ * a) Lexical Analysis (Tokenization):
+ *    - Input: String of source code
+ *    - Process: Scan character-by-character, recognize patterns
+ *    - Output: Array of tokens (lexemes with types)
+ *    - Example: "(add 2 2)" → [{paren,(}, {name,add}, {number,2}, {number,2}, {paren,}]
  *
- * 2. *Transformation* takes this abstract representation and manipulates to do
- *    whatever the compiler wants it to.
+ * b) Syntactic Analysis (Parsing):
+ *    - Input: Token stream
+ *    - Process: Apply grammar rules, build hierarchical structure
+ *    - Output: Abstract Syntax Tree (AST)
+ *    - Uses: Recursive Descent Parsing (top-down parsing technique)
+ *    - Example: Tokens → AST with CallExpression and NumberLiteral nodes
  *
- * 3. *Code Generation* takes the transformed representation of the code and
- *    turns it into new code.
+ * PHASE 2: TRANSFORMATION (Semantic Analysis + AST Transformation)
+ * =================================================================
+ * Manipulates the AST to transform it from source language to target language.
+ *
+ * Operations:
+ * - Semantic analysis (type checking, scope resolution)
+ * - Pattern matching on node types
+ * - Creating new AST structure for target language
+ * - Example: LISP-style AST → JavaScript-style AST
+ *
+ * PHASE 3: CODE GENERATION
+ * ========================
+ * Converts the transformed AST into target code.
+ *
+ * Process:
+ * - Recursive traversal of AST
+ * - Generate code for each node type
+ * - Concatenate generated code
+ * - Example: JavaScript AST → JavaScript source code string
+ *
+ * COMPLETE PIPELINE:
+ * Source Code → [Tokenizer] → Tokens → [Parser] → AST → 
+ * [Transformer] → New AST → [Code Generator] → Target Code
  */
 
 /**
@@ -343,18 +376,50 @@
 /**
  * ============================================================================
  *                                   (/^▽^)/
- *                                THE TOKENIZER!
+ *                          PHASE 1A: THE TOKENIZER!
+ *                        (LEXICAL ANALYSIS)
  * ============================================================================
  */
 
 /**
- * We're gonna start off with our first phase of parsing, lexical analysis, with
- * the tokenizer.
+ * LEXICAL ANALYSIS CONCEPTS:
+ * ==========================
+ * 
+ * Tokenization is the first step of parsing. It converts a sequence of
+ * characters into a sequence of tokens.
  *
- * We're just going to take our string of code and break it down into an array
- * of tokens.
+ * Key Concepts:
+ * - LEXEME: The actual sequence of characters (e.g., "add", "123", "(")
+ * - TOKEN: Abstract representation (type + value pair)
+ * - PATTERN: Regular expression or rule for matching lexemes
+ * - FINITE AUTOMATA: State machine for recognizing patterns
  *
- *   (add 2 (subtract 4 2))   =>   [{ type: 'paren', value: '(' }, ...]
+ * Token Types Recognized:
+ * - Punctuation: parentheses (paren)
+ * - Numbers: integer literals (number)
+ * - Strings: quoted text (string)
+ * - Identifiers: function/variable names (name)
+ *
+ * Algorithm:
+ * 1. Maintain position cursor in input string
+ * 2. Read character at cursor
+ * 3. Match against token patterns in order
+ * 4. Create token object with type and value
+ * 5. Advance cursor
+ * 6. Repeat until end of input
+ *
+ * Example Input:  "(add 2 (subtract 4 2))"
+ * Example Output: [
+ *   { type: 'paren', value: '(' },
+ *   { type: 'name', value: 'add' },
+ *   { type: 'number', value: '2' },
+ *   { type: 'paren', value: '(' },
+ *   { type: 'name', value: 'subtract' },
+ *   { type: 'number', value: '4' },
+ *   { type: 'number', value: '2' },
+ *   { type: 'paren', value: ')' },
+ *   { type: 'paren', value: ')' }
+ * ]
  */
 
 // We start by accepting an input string of code, and we're gonna set up two
@@ -521,15 +586,50 @@ function tokenizer(input) {
 /**
  * ============================================================================
  *                                 ヽ/❀o ل͜ o\ﾉ
- *                                THE PARSER!!!
+ *                      PHASE 1B: THE PARSER!!!
+ *                    (SYNTACTIC ANALYSIS)
  * ============================================================================
  */
 
 /**
- * For our parser we're going to take our array of tokens and turn it into an
- * AST.
+ * SYNTACTIC ANALYSIS CONCEPTS:
+ * ============================
+ * 
+ * Parsing converts a token stream into an Abstract Syntax Tree (AST).
+ * It enforces the syntactic rules of the language.
  *
- *   [{ type: 'paren', value: '(' }, ...]   =>   { type: 'Program', body: [...] }
+ * Key Concepts:
+ * - CONTEXT-FREE GRAMMAR: Rules defining valid syntax
+ * - PARSE TREE: Derivation tree showing how input derives from grammar
+ * - ABSTRACT SYNTAX TREE (AST): Simplified parse tree for later processing
+ * - RECURSIVE DESCENT: Top-down parsing by recursively calling functions
+ *
+ * Parsing Strategy Used: RECURSIVE DESCENT
+ * - Each grammar rule becomes a function
+ * - Functions call each other recursively
+ * - Naturally handles nested structures
+ * - Easy to understand and implement
+ *
+ * Grammar Rules (simplified):
+ * Program        → Expression*
+ * Expression     → CallExpression | NumberLiteral | StringLiteral
+ * CallExpression → '(' name Expression* ')'
+ * NumberLiteral  → number
+ * StringLiteral  → string
+ *
+ * Example:
+ * Input Tokens:  [{paren,(}, {name,add}, {number,2}, {number,3}, {paren,)}]
+ * Output AST:    {
+ *                  type: 'Program',
+ *                  body: [{
+ *                    type: 'CallExpression',
+ *                    name: 'add',
+ *                    params: [
+ *                      { type: 'NumberLiteral', value: '2' },
+ *                      { type: 'NumberLiteral', value: '3' }
+ *                    ]
+ *                  }]
+ *                }
  */
 
 // Okay, so we define a `parser` function that accepts our array of `tokens`.
@@ -680,43 +780,47 @@ function parser(tokens) {
 /**
  * ============================================================================
  *                                 ⌒(❀>◞౪◟<❀)⌒
- *                               THE TRAVERSER!!!
+ *                    PHASE 2A: THE TRAVERSER!!!
+ *                  (AST TRAVERSAL WITH VISITOR PATTERN)
  * ============================================================================
  */
 
 /**
- * So now we have our AST, and we want to be able to visit different nodes with
- * a visitor. We need to be able to call the methods on the visitor whenever we
- * encounter a node with a matching type.
+ * TREE TRAVERSAL CONCEPTS:
+ * =======================
+ * 
+ * The traverser walks through the AST in a depth-first manner, visiting
+ * each node and allowing operations to be performed.
  *
- *   traverse(ast, {
- *     Program: {
- *       enter(node, parent) {
- *         // ...
- *       },
- *       exit(node, parent) {
- *         // ...
- *       },
- *     },
+ * Key Concepts:
+ * - DEPTH-FIRST TRAVERSAL: Visit parent, then recursively visit children
+ * - VISITOR PATTERN: Separate operations from data structure
+ * - ENTER/EXIT CALLBACKS: Execute code entering and exiting nodes
+ * - PARENT TRACKING: Pass parent reference for context
  *
- *     CallExpression: {
- *       enter(node, parent) {
- *         // ...
- *       },
- *       exit(node, parent) {
- *         // ...
- *       },
- *     },
+ * Traversal Order (Depth-First, Pre-order):
+ * For tree: Program → CallExpression → [NumberLiteral, CallExpression] → [NumberLiteral, NumberLiteral]
+ * Order: Program(enter) → CallExpr1(enter) → NumLit1(enter) → NumLit1(exit) → 
+ *        CallExpr2(enter) → NumLit2(enter) → NumLit2(exit) → NumLit3(enter) → 
+ *        NumLit3(exit) → CallExpr2(exit) → CallExpr1(exit) → Program(exit)
  *
- *     NumberLiteral: {
- *       enter(node, parent) {
- *         // ...
- *       },
- *       exit(node, parent) {
- *         // ...
- *       },
- *     },
- *   });
+ * Visitor Pattern:
+ * - Decouples tree structure from operations
+ * - Allows multiple different operations on same tree
+ * - Operations defined as visitor object with node-type methods
+ * - Each method receives node and parent reference
+ *
+ * Example Visitor:
+ * const visitor = {
+ *   NumberLiteral: {
+ *     enter(node, parent) { console.log('Entering:', node.value); },
+ *     exit(node, parent) { console.log('Exiting:', node.value); }
+ *   },
+ *   CallExpression: {
+ *     enter(node, parent) { console.log('Calling:', node.name); },
+ *     exit(node, parent) { }
+ *   }
+ * };
  */
 
 // So we define a traverser function which accepts an AST and a
@@ -790,49 +894,53 @@ function traverser(ast, visitor) {
 /**
  * ============================================================================
  *                                   ⁽(◍˃̵͈̑ᴗ˂̵͈̑)⁽
- *                              THE TRANSFORMER!!!
+ *                    PHASE 2B: THE TRANSFORMER!!!
+ *                     (SEMANTIC ANALYSIS & TRANSFORMATION)
  * ============================================================================
  */
 
 /**
- * Next up, the transformer. Our transformer is going to take the AST that we
- * have built and pass it to our traverser function with a visitor and will
- * create a new ast.
+ * SEMANTIC ANALYSIS & TRANSFORMATION CONCEPTS:
+ * ============================================
+ * 
+ * The transformer performs semantic analysis and AST transformation,
+ * converting from source language representation to target language.
  *
- * ----------------------------------------------------------------------------
- *   Original AST                     |   Transformed AST
- * ----------------------------------------------------------------------------
- *   {                                |   {
- *     type: 'Program',               |     type: 'Program',
- *     body: [{                       |     body: [{
- *       type: 'CallExpression',      |       type: 'ExpressionStatement',
- *       name: 'add',                 |       expression: {
- *       params: [{                   |         type: 'CallExpression',
- *         type: 'NumberLiteral',     |         callee: {
- *         value: '2'                 |           type: 'Identifier',
- *       }, {                         |           name: 'add'
- *         type: 'CallExpression',    |         },
- *         name: 'subtract',          |         arguments: [{
- *         params: [{                 |           type: 'NumberLiteral',
- *           type: 'NumberLiteral',   |           value: '2'
- *           value: '4'               |         }, {
- *         }, {                       |           type: 'CallExpression',
- *           type: 'NumberLiteral',   |           callee: {
- *           value: '2'               |             type: 'Identifier',
- *         }]                         |             name: 'subtract'
- *       }]                           |           },
- *     }]                             |           arguments: [{
- *   }                                |             type: 'NumberLiteral',
- *                                    |             value: '4'
- * ---------------------------------- |           }, {
- *                                    |             type: 'NumberLiteral',
- *                                    |             value: '2'
- *                                    |           }]
- *  (sorry the other one is longer.)  |         }
- *                                    |       }
- *                                    |     }]
- *                                    |   }
- * ----------------------------------------------------------------------------
+ * Key Concepts:
+ * - SEMANTIC ANALYSIS: Check meaning and validity
+ * - TYPE CHECKING: Verify operations have valid operand types
+ * - SCOPE ANALYSIS: Verify variables defined before use
+ * - AST TRANSFORMATION: Convert structure for target language
+ * - SYMBOL TABLE: Track identifiers and their properties
+ *
+ * Transformation Strategy:
+ * 1. Traverse source AST using visitor pattern
+ * 2. For each node, create corresponding target node
+ * 3. Transform properties and structure as needed
+ * 4. Build new AST incrementally using _context references
+ * 5. Return completely new AST for target language
+ *
+ * Transformation Rules (LISP to JavaScript):
+ * - CallExpression with 'name' → CallExpression with 'Identifier' callee
+ * - Top-level calls wrapped in ExpressionStatement
+ * - params array renamed to arguments array
+ * - Direct children transformation handled via context propagation
+ *
+ * Example Transformation:
+ * Input:  { type: 'CallExpression', name: 'add', params: [...] }
+ * Output: {
+ *           type: 'ExpressionStatement',
+ *           expression: {
+ *             type: 'CallExpression',
+ *             callee: { type: 'Identifier', name: 'add' },
+ *             arguments: [...]
+ *           }
+ *         }
+ *
+ * Context Pattern:
+ * - _context: Reference to array where nodes should be pushed
+ * - Allows parent nodes to specify where children go
+ * - Enables non-destructive transformation (original AST unchanged)
  */
 
 // So we have our transformer function which will accept the lisp ast.
@@ -928,15 +1036,52 @@ function transformer(ast) {
 /**
  * ============================================================================
  *                               ヾ（〃＾∇＾）ﾉ♪
- *                            THE CODE GENERATOR!!!!
+ *                      PHASE 3: THE CODE GENERATOR!!!!
+ *                         (CODE GENERATION)
  * ============================================================================
  */
 
 /**
- * Now let's move onto our last phase: The Code Generator.
+ * CODE GENERATION CONCEPTS:
+ * =========================
+ * 
+ * Code generation converts the transformed AST into target code.
+ * This is the final phase of compilation.
  *
- * Our code generator is going to recursively call itself to print each node in
- * the tree into one giant string.
+ * Key Concepts:
+ * - RECURSIVE DESCENT CODE GENERATION: Recursively process AST nodes
+ * - PATTERN MATCHING: Use switch/case for node type dispatch
+ * - TEMPLATE-BASED: Each node type has generation template
+ * - STRING BUILDING: Concatenate generated code strings
+ * - BOTTOM-UP GENERATION: Leaf nodes first, then composite nodes
+ *
+ * Generation Strategy:
+ * 1. Process AST nodes recursively
+ * 2. For each node type, generate corresponding target code
+ * 3. Recursively generate code for child nodes
+ * 4. Combine child code according to template
+ * 5. Return string of target code
+ *
+ * Node Type Handlers:
+ * - Program: Join body statements with newlines
+ * - ExpressionStatement: Generate expression + semicolon
+ * - CallExpression: Generate callee(args) format
+ * - Identifier: Return identifier name
+ * - NumberLiteral: Return number value
+ * - StringLiteral: Return quoted string value
+ *
+ * Example:
+ * Input AST:  { type: 'CallExpression', callee: { type: 'Identifier', name: 'add' },
+ *              arguments: [{ type: 'NumberLiteral', value: '2' }, ...] }
+ * Process:    1. Generate callee: 'add'
+ *             2. Generate arguments: ['2', '3']
+ *             3. Combine: 'add' + '(' + '2, 3' + ')'
+ * Output:     'add(2, 3)'
+ *
+ * Optimization Opportunities:
+ * - Constant folding: Compile-time expression evaluation
+ * - Dead code elimination: Remove unreachable code
+ * - Code compression: Minify output (if needed)
  */
 
 function codeGenerator(node) {
@@ -1000,10 +1145,92 @@ function codeGenerator(node) {
  * FINALLY! We'll create our `compiler` function. Here we will link together
  * every part of the pipeline.
  *
- *   1. input  => tokenizer   => tokens
- *   2. tokens => parser      => ast
- *   3. ast    => transformer => newAst
- *   4. newAst => generator   => output
+ * COMPILER ORCHESTRATION - COMPLETE COMPILATION PIPELINE
+ * ======================================================
+ * 
+ * This is the main entry point that orchestrates all compilation phases.
+ * The compiler follows a classic four-stage compilation model:
+ *
+ * STAGE 1: ANALYSIS (Lexical & Syntactic)
+ *   1.1. Tokenization  (Input: source string) 
+ *        • Scans character-by-character using finite automata
+ *        • Recognizes patterns: identifiers, numbers, operators, keywords
+ *        • Output: Token stream (linear sequence of token objects)
+ *        • Complexity: O(n) where n = input length
+ *   
+ *   1.2. Parsing  (Input: token stream)
+ *        • Converts token stream to Abstract Syntax Tree (AST)
+ *        • Uses recursive descent parsing algorithm
+ *        • Validates syntax against context-free grammar
+ *        • Builds hierarchical tree structure representing program
+ *        • Output: AST node with program body containing expressions
+ *        • Complexity: O(n) with single-pass left-to-right scan
+ *
+ * STAGE 2: TRANSFORMATION (Semantic Analysis)
+ *   2.1. AST Traversal  (Input: AST)
+ *        • Uses visitor pattern to walk entire tree depth-first
+ *        • Applies transformations to specific node types
+ *        • Maintains parent node references for context
+ *        • Collects transformation results in new tree structure
+ *
+ *   2.2. Transformation  (Input: traversed AST)
+ *        • Performs semantic analysis and source-to-source transformation
+ *        • Converts domain-specific language (LISP-like) to target (JavaScript-like)
+ *        • Handles type conversions: NumberLiteral, StringLiteral, CallExpression
+ *        • Maps source operators to target implementations
+ *        • Output: Semantically equivalent AST in target representation
+ *
+ * STAGE 3: CODE GENERATION
+ *   3.1. Code Generation  (Input: transformed AST)
+ *        • Recursively traverses transformed AST
+ *        • Emits executable code for each node type
+ *        • Uses string interpolation to build code strings
+ *        • Concatenates identifier, function call, and expression code
+ *        • Output: Target language source code (executable JavaScript string)
+ *
+ * DATA FLOW VISUALIZATION:
+ *   Input String
+ *       ↓
+ *   [TOKENIZER] → Token Stream
+ *       ↓
+ *   [PARSER] → AST (domain-specific structure)
+ *       ↓
+ *   [TRAVERSER] → Traversal with Visitor
+ *       ↓
+ *   [TRANSFORMER] → New AST (target structure)
+ *       ↓
+ *   [CODE GENERATOR] → Output String
+ *       ↓
+ *   Executable Code
+ *
+ * EXAMPLE TRANSFORMATION:
+ *   Input:  "(add 2 (subtract 4 2))"
+ *   
+ *   Tokens:   [PAREN, ADD, NUM(2), PAREN, SUBTRACT, NUM(4), NUM(2), PAREN, PAREN]
+ *   AST:      Program { body: [CallExpression { callee: "add", args: [...] }] }
+ *   Transform: Convert LISP-like to JavaScript function calls
+ *   NewAST:   Program { body: [CallExpression { callee: Identifier, arguments: [...] }] }
+ *   Output:   "add(2, subtract(4, 2))"
+ *
+ * KEY COMPILATION PRINCIPLES:
+ * • Single Responsibility: Each phase has well-defined input and output
+ * • Separation of Concerns: Analysis, transformation, and generation are independent
+ * • Composability: Each stage feeds into the next without side effects
+ * • Extensibility: Adding new node types requires changes in specific phases only
+ * • Error Detection: Syntax errors caught in parser, semantic issues in transformer
+ *
+ * PERFORMANCE CHARACTERISTICS:
+ * • Overall Time Complexity: O(n) - linear with respect to input length
+ * • Space Complexity: O(d) where d = AST depth (call stack during recursion)
+ * • Each phase processes the entire input/AST once
+ * • Optimization: Early error detection prevents unnecessary later phases
+ *
+ * ARCHITECTURAL BENEFITS:
+ * • Modularity: Can swap phases independently
+ * • Testability: Each function can be tested in isolation
+ * • Maintainability: Adding language features localized to specific phases
+ * • Debuggability: Can inspect intermediate representations (tokens, AST, code)
+ * • Educational Value: Clear separation of compilation concerns
  */
 
 function compiler(input) {
