@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TinyCompiler - Online Playground</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+      background: linear-gradient(135deg, #1e1e1e 0%, #2d2d30 100%);
+      color: #d4d4d4;
+      min-height: 100vh;
+    }
+
+    .header {
+      background: #0e639c;
+      color: white;
+      padding: 20px;
+      text-align: center;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    }
+
+    .header h1 {
+      font-size: 28px;
+      margin-bottom: 5px;
+    }
+
+    .header p {
+      font-size: 14px;
+      opacity: 0.9;
+    }
+
+    .container {
+      display: flex;
+      height: calc(100vh - 80px);
+      gap: 2px;
+    }
+
+    .section {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      background: #252526;
+    }
+
+    .section-title {
+      background: #2d2d30;
+      color: #4ec9b0;
+      padding: 12px 20px;
+      font-weight: bold;
+      border-bottom: 2px solid #0e639c;
+    }
+
+    textarea {
+      flex: 1;
+      background: #1e1e1e;
+      color: #d4d4d4;
+      border: none;
+      padding: 20px;
+      resize: none;
+      font-family: inherit;
+      font-size: 14px;
+      line-height: 1.6;
+      outline: none;
+    }
+
+    textarea::selection {
+      background: #264f78;
+    }
+
+    .controls {
+      padding: 15px 20px;
+      background: #2d2d30;
+      border-top: 1px solid #3e3e42;
+      display: flex;
+      gap: 10px;
+    }
+
+    button {
+      background: #0e639c;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      cursor: pointer;
+      border-radius: 4px;
+      font-size: 13px;
+      font-weight: bold;
+      transition: background 0.2s;
+    }
+
+    button:hover {
+      background: #1177bb;
+    }
+
+    button:active {
+      background: #0d5a8f;
+    }
+
+    .output-section {
+      overflow: auto;
+    }
+
+    #output {
+      background: #1e1e1e;
+      color: #d4d4d4;
+      padding: 20px;
+      font-family: inherit;
+      font-size: 14px;
+      line-height: 1.6;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      min-height: 100%;
+    }
+
+    .error {
+      color: #f48771;
+      background: rgba(244, 135, 113, 0.1);
+      padding: 10px;
+      border-left: 3px solid #f48771;
+    }
+
+    .success {
+      color: #4ec9b0;
+    }
+
+    .placeholder {
+      color: #6a6a6a;
+    }
+
+    .status {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      color: #6a6a6a;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #6a6a6a;
+    }
+
+    .status-dot.active {
+      background: #4ec9b0;
+    }
+
+    @media (max-width: 768px) {
+      .container {
+        flex-direction: column;
+      }
+
+      .header h1 {
+        font-size: 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>🔧 TinyCompiler</h1>
+    <p>Convert LISP-like syntax to C-like function calls</p>
+  </div>
+
+  <div class="container">
+    <div class="section">
+      <div class="section-title">Input (LISP Syntax)</div>
+      <textarea id="input" placeholder="Example: (add 2 (subtract 4 2))&#10;Try: (multiply 3 (add 5 2))"></textarea>
+      <div class="controls">
+        <button onclick="compile()">▶ Compile</button>
+        <button onclick="clearInput()">🗑️ Clear</button>
+        <div class="status">
+          <div class="status-dot" id="statusDot"></div>
+          <span id="statusText">Ready</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="section output-section">
+      <div class="section-title">Output (C Syntax)</div>
+      <div id="output" class="placeholder">Waiting for input...</div>
+    </div>
+  </div>
+
+  <script>
+    const inputEl = document.getElementById('input');
+    const outputEl = document.getElementById('output');
+    const statusDot = document.getElementById('statusDot');
+    const statusText = document.getElementById('statusText');
+
+    function setStatus(text, isActive = true) {
+      statusText.textContent = text;
+      statusDot.className = 'status-dot' + (isActive ? ' active' : '');
+    }
+
+    async function compile() {
+      const code = inputEl.value.trim();
+      
+      if (!code) {
+        outputEl.innerHTML = '<div class="placeholder">Please enter some code</div>';
+        setStatus('Waiting for input', false);
+        return;
+      }
+
+      setStatus('Compiling...', true);
+      outputEl.innerHTML = '<span class="placeholder">Compiling...</span>';
+
+      try {
+        const response = await fetch(`/api/compiler?code=${encodeURIComponent(code)}`);
+        const data = await response.json();
+        
+        if (data.success) {
+          outputEl.innerHTML = `<span class="success">${escapeHtml(data.output)}</span>`;
+          setStatus('Success', true);
+        } else {
+          outputEl.innerHTML = `<div class="error">Error: ${escapeHtml(data.error)}</div>`;
+          setStatus('Error', false);
+        }
+      } catch (error) {
+        outputEl.innerHTML = `<div class="error">Network Error: ${escapeHtml(error.message)}</div>`;
+        setStatus('Error', false);
+      }
+    }
+
+    function clearInput() {
+      inputEl.value = '';
+      outputEl.innerHTML = '<div class="placeholder">Waiting for input...</div>';
+      setStatus('Cleared', false);
+      inputEl.focus();
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    // Compile on Ctrl+Enter
+    inputEl.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+        compile();
+      }
+    });
+
+    // Auto-compile on input (optional)
+    let compileTimeout;
+    inputEl.addEventListener('input', () => {
+      clearTimeout(compileTimeout);
+      setStatus('Typing...', true);
+      compileTimeout = setTimeout(compile, 1000);
+    });
+
+    // Focus input on load
+    inputEl.focus();
+  </script>
+</body>
+</html>
