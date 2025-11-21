@@ -1,7 +1,29 @@
 {
-  "name": "TinyCompiler",
+  "name": "tinycompiler",
   "version": "1.0.0",
+  "description": "A super tiny educational compiler written in ~200 lines of JavaScript",
   "author": "Ovi Shekh <hi@ovishekh.com> (ovishekh.com)",
   "license": "MIT",
-  "main": "./TinyCompiler.js"
+  "main": "./TinyCompiler.js",
+  "scripts": {
+    "test": "node test.js",
+    "start": "node api/server.js",
+    "build": "echo 'No build required - pure JavaScript'"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "keywords": [
+    "compiler",
+    "educational",
+    "parser",
+    "tokenizer",
+    "lisp",
+    "javascript"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ovishkh/TinyCompiler.git"
+  },
+  "homepage": "https://TinyCompiler.ovishekh.com"
 }
