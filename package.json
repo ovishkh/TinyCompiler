@@ -1,0 +1,7 @@
+{
+  "name": "TinyCompiler",
+  "version": "1.0.0",
+  "author": "Ovi Shekh <hi@ovishekh.com> (ovishekh.com)",
+  "license": "MIT",
+  "main": "./TinyCompiler.js"
+}
