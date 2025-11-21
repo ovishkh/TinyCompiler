@@ -2,6 +2,10 @@
 
 Thank you for your interest in contributing to TinyCompiler! We welcome contributions from everyone. This document provides guidelines and instructions for contributing.
 
+**Repository:** https://github.com/ovishkh/TinyCompiler  
+**Live Demo:** https://TinyCompiler.ovishekh.com/  
+**Author:** Ovi Shekh (ovishekh.com)
+
 ## Code of Conduct
 
 - Be respectful and inclusive
