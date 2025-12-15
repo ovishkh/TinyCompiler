@@ -6,7 +6,7 @@
   "license": "MIT",
   "main": "./TinyCompiler.js",
   "scripts": {
-    "test": "node test.js",
+    "test": "node test_suite.js",
     "start": "node api/server.js",
     "build": "echo 'No build required - pure JavaScript'"
   },

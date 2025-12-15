@@ -1,10 +1,28 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>TinyCompiler - Online Playground</title>
+  <title>TinyCompiler - The Super Tiny Compiler</title>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+    rel="stylesheet">
   <style>
+    :root {
+      --bg-gradient-start: #0f172a;
+      --bg-gradient-end: #1e1b4b;
+      --glass-bg: rgba(30, 41, 59, 0.7);
+      --glass-border: rgba(255, 255, 255, 0.08);
+      --primary: #3b82f6;
+      --primary-hover: #2563eb;
+      --text-main: #f1f5f9;
+      --text-muted: #94a3b8;
+      --code-bg: rgba(15, 23, 42, 0.6);
+      --success: #10b981;
+      --error: #ef4444;
+    }
+
     * {
       margin: 0;
       padding: 0;
@@ -12,253 +30,607 @@
     }
 
     body {
-      font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
-      background: linear-gradient(135deg, #1e1e1e 0%, #2d2d30 100%);
-      color: #d4d4d4;
+      font-family: 'Inter', sans-serif;
+      background: linear-gradient(135deg, var(--bg-gradient-start), var(--bg-gradient-end));
+      color: var(--text-main);
       min-height: 100vh;
-    }
-
-    .header {
-      background: #0e639c;
-      color: white;
-      padding: 20px;
-      text-align: center;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-    }
-
-    .header h1 {
-      font-size: 28px;
-      margin-bottom: 5px;
-    }
-
-    .header p {
-      font-size: 14px;
-      opacity: 0.9;
-    }
-
-    .container {
       display: flex;
-      height: calc(100vh - 80px);
-      gap: 2px;
+      flex-direction: column;
+      overflow: hidden;
     }
 
-    .section {
+    /* Glassmorphism Background Elements */
+    .orb {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(80px);
+      z-index: -1;
+      opacity: 0.4;
+    }
+
+    .orb-1 {
+      top: -10%;
+      left: -10%;
+      width: 400px;
+      height: 400px;
+      background: #4f46e5;
+    }
+
+    .orb-2 {
+      bottom: -10%;
+      right: -10%;
+      width: 500px;
+      height: 500px;
+      background: #06b6d4;
+    }
+
+    /* Header */
+    header {
+      padding: 24px 40px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--glass-border);
+      backdrop-filter: blur(10px);
+      background: rgba(15, 23, 42, 0.4);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand h1 {
+      font-size: 24px;
+      font-weight: 700;
+      background: linear-gradient(to right, #60a5fa, #a78bfa);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      letter-spacing: -0.5px;
+    }
+
+    .brand-tag {
+      font-size: 12px;
+      padding: 4px 10px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 20px;
+      color: var(--text-muted);
+      font-weight: 500;
+      border: 1px solid var(--glass-border);
+    }
+
+    /* Main Content */
+    main {
+      flex: 1;
+      display: flex;
+      padding: 30px;
+      gap: 24px;
+      max-width: 1600px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    .panel {
       flex: 1;
       display: flex;
       flex-direction: column;
-      background: #252526;
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      border-radius: 16px;
+      overflow: hidden;
+      backdrop-filter: blur(12px);
+      box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+      transition: transform 0.2s, box-shadow 0.2s;
     }
 
-    .section-title {
-      background: #2d2d30;
-      color: #4ec9b0;
-      padding: 12px 20px;
-      font-weight: bold;
-      border-bottom: 2px solid #0e639c;
+    .panel:hover {
+      box-shadow: 0 8px 40px rgba(0, 0, 0, 0.2);
     }
 
-    textarea {
-      flex: 1;
-      background: #1e1e1e;
-      color: #d4d4d4;
-      border: none;
-      padding: 20px;
-      resize: none;
-      font-family: inherit;
-      font-size: 14px;
-      line-height: 1.6;
-      outline: none;
-    }
-
-    textarea::selection {
-      background: #264f78;
-    }
-
-    .controls {
-      padding: 15px 20px;
-      background: #2d2d30;
-      border-top: 1px solid #3e3e42;
+    .panel-header {
+      padding: 16px 24px;
+      background: rgba(255, 255, 255, 0.03);
+      border-bottom: 1px solid var(--glass-border);
       display: flex;
-      gap: 10px;
+      justify-content: space-between;
+      align-items: center;
     }
 
-    button {
-      background: #0e639c;
-      color: white;
-      border: none;
-      padding: 10px 20px;
-      cursor: pointer;
-      border-radius: 4px;
-      font-size: 13px;
-      font-weight: bold;
-      transition: background 0.2s;
-    }
-
-    button:hover {
-      background: #1177bb;
-    }
-
-    button:active {
-      background: #0d5a8f;
-    }
-
-    .output-section {
-      overflow: auto;
-    }
-
-    #output {
-      background: #1e1e1e;
-      color: #d4d4d4;
-      padding: 20px;
-      font-family: inherit;
+    .panel-title {
       font-size: 14px;
-      line-height: 1.6;
-      white-space: pre-wrap;
-      word-wrap: break-word;
-      min-height: 100%;
-    }
-
-    .error {
-      color: #f48771;
-      background: rgba(244, 135, 113, 0.1);
-      padding: 10px;
-      border-left: 3px solid #f48771;
-    }
-
-    .success {
-      color: #4ec9b0;
-    }
-
-    .placeholder {
-      color: #6a6a6a;
-    }
-
-    .status {
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
       display: flex;
       align-items: center;
       gap: 8px;
-      font-size: 12px;
-      color: #6a6a6a;
     }
 
-    .status-dot {
+    .panel-title::before {
+      content: '';
+      display: block;
       width: 8px;
       height: 8px;
       border-radius: 50%;
-      background: #6a6a6a;
     }
 
-    .status-dot.active {
-      background: #4ec9b0;
+    .input-panel .panel-title::before {
+      background: #3b82f6;
+      box-shadow: 0 0 10px #3b82f6;
     }
 
-    @media (max-width: 768px) {
-      .container {
-        flex-direction: column;
+    .output-panel .panel-title::before {
+      background: #10b981;
+      box-shadow: 0 0 10px #10b981;
+    }
+
+    .editor-container {
+      flex: 1;
+      position: relative;
+      background: var(--code-bg);
+    }
+
+    textarea,
+    .output-content {
+      width: 100%;
+      height: 100%;
+      background: transparent;
+      border: none;
+      color: var(--text-main);
+      padding: 24px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 15px;
+      line-height: 1.6;
+      resize: none;
+      outline: none;
+    }
+
+    .output-content {
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+
+    .placeholder {
+      color: #52525b;
+      font-style: italic;
+    }
+
+    /* Controls & Actions */
+    .actions {
+      display: flex;
+      gap: 12px;
+      padding: 20px;
+      border-top: 1px solid var(--glass-border);
+      background: rgba(15, 23, 42, 0.3);
+    }
+
+    .btn {
+      padding: 10px 20px;
+      border-radius: 8px;
+      border: none;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: white;
+      box-shadow: 0 4px 14px rgba(59, 130, 246, 0.4);
+    }
+
+    .btn-primary:hover {
+      background: var(--primary-hover);
+      transform: translateY(-1px);
+      box-shadow: 0 6px 20px rgba(59, 130, 246, 0.6);
+    }
+
+    .btn-primary:active {
+      transform: translateY(0);
+    }
+
+    .btn-ghost {
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--text-muted);
+      border: 1px solid var(--glass-border);
+    }
+
+    .btn-ghost:hover {
+      background: rgba(255, 255, 255, 0.1);
+      color: white;
+    }
+
+    /* Example Chips */
+    .examples {
+      margin-top: 20px;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      padding: 0 40px;
+    }
+
+    .chip {
+      padding: 6px 12px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--glass-border);
+      border-radius: 20px;
+      font-size: 12px;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .chip:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    /* Status & Feedback */
+    .status-bar {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .status-indicator {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+      font-weight: 500;
+      padding: 6px 12px;
+      border-radius: 6px;
+    }
+
+    .status-success {
+      color: var(--success);
+      background: rgba(16, 185, 129, 0.1);
+    }
+
+    .status-error {
+      color: var(--error);
+      background: rgba(239, 68, 68, 0.1);
+    }
+
+    .status-loading {
+      color: #f59e0b;
+      background: rgba(245, 158, 11, 0.1);
+    }
+
+    .loader {
+      width: 16px;
+      height: 16px;
+      border: 2px solid #f59e0b;
+      border-bottom-color: transparent;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% {
+        transform: rotate(0deg);
       }
 
-      .header h1 {
-        font-size: 20px;
+      100% {
+        transform: rotate(360deg);
+      }
+    }
+
+    /* Syntax Highlighting (Simulated) */
+    .error-msg {
+      color: #fca5a5;
+      background: rgba(185, 28, 28, 0.2);
+      border-left: 3px solid #ef4444;
+      padding: 16px;
+      border-radius: 0 8px 8px 0;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .success-msg {
+      color: #d1fae5;
+    }
+
+    /* Mobile */
+    @media (max-width: 768px) {
+      main {
+        flex-direction: column;
+        overflow-y: auto;
+        height: auto;
+      }
+
+      .panel {
+        min-height: 400px;
+      }
+
+      header {
+        padding: 16px 20px;
+      }
+
+      .examples {
+        padding: 0 20px;
+        margin-bottom: 20px;
       }
     }
   </style>
 </head>
+
 <body>
-  <div class="header">
-    <h1>🔧 TinyCompiler</h1>
-    <p>Convert LISP-like syntax to C-like function calls</p>
+
+  <!-- Background Ambience -->
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+
+  <header>
+    <div class="brand">
+      <h1>TinyCompiler</h1>
+      <span class="brand-tag">v1.0.0</span>
+    </div>
+    <div class="socials">
+      <!-- Icons or Links could go here -->
+    </div>
+  </header>
+
+  <div class="examples">
+    <button class="chip" onclick="loadExample(1)">Math: Add & Subtract</button>
+    <button class="chip" onclick="loadExample(2)">Deeply Nested</button>
+    <button class="chip" onclick="loadExample(3)">Strings</button>
+    <button class="chip" onclick="loadExample(4)" style="border-color: #a78bfa; color: #a78bfa;">Complex
+      Challenge</button>
   </div>
 
-  <div class="container">
-    <div class="section">
-      <div class="section-title">Input (LISP Syntax)</div>
-      <textarea id="input" placeholder="Example: (add 2 (subtract 4 2))&#10;Try: (multiply 3 (add 5 2))"></textarea>
-      <div class="controls">
-        <button onclick="compile()">▶ Compile</button>
-        <button onclick="clearInput()">🗑️ Clear</button>
-        <div class="status">
-          <div class="status-dot" id="statusDot"></div>
-          <span id="statusText">Ready</span>
+  <main>
+    <!-- Input Panel -->
+    <div class="panel input-panel">
+      <div class="panel-header">
+        <span class="panel-title">LISP Source</span>
+        <div class="actions" style="border:none; padding:0; background:none;">
+          <button class="btn btn-ghost" onclick="clearInput()" style="padding: 6px 12px; font-size:12px;">Clear</button>
         </div>
+      </div>
+      <div class="editor-container">
+        <textarea id="input" placeholder="(add 2 2)" spellcheck="false"></textarea>
+      </div>
+      <div class="actions">
+        <button class="btn btn-primary" onclick="compile()">
+          <span>Execute Build</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polygon points="5 3 19 12 5 21 5 3"></polygon>
+          </svg>
+        </button>
+        <div id="status-area" class="status-bar"></div>
       </div>
     </div>
 
-    <div class="section output-section">
-      <div class="section-title">Output (C Syntax)</div>
-      <div id="output" class="placeholder">Waiting for input...</div>
+    <!-- Output Panel with Tabs -->
+    <div class="panel output-panel">
+      <div class="panel-header tab-header" style="justify-content: flex-start; gap: 2px;">
+        <button class="tab-btn" onclick="switchTab('tokens')">Tokenizer</button>
+        <button class="tab-btn" onclick="switchTab('ast')">Parser</button>
+        <button class="tab-btn" onclick="switchTab('newast')">Transformer</button>
+        <button class="tab-btn active" onclick="switchTab('output')">Code Generator</button>
+        <div style="margin-left: auto;">
+          <button class="btn btn-ghost" onclick="copyOutput()" style="padding: 6px 12px; font-size:12px;">Copy</button>
+        </div>
+      </div>
+      <div class="editor-container">
+        <div id="output" class="output-content code-view"><span class="placeholder">// Transpiled code will appear
+            here...</span></div>
+        <div id="tokens-view" class="output-content code-view" style="display:none;"></div>
+        <div id="ast-view" class="output-content code-view" style="display:none;"></div>
+        <div id="newast-view" class="output-content code-view" style="display:none;"></div>
+      </div>
     </div>
-  </div>
+  </main>
+
+  <style>
+    .tab-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      padding: 8px 16px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      border-radius: 6px;
+      transition: all 0.2s;
+    }
+
+    .tab-btn.active {
+      background: rgba(255, 255, 255, 0.1);
+      color: white;
+    }
+
+    .tab-btn:hover:not(.active) {
+      background: rgba(255, 255, 255, 0.05);
+      color: #e2e8f0;
+    }
+
+    .code-view {
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    /* Simple JSON coloring */
+    .json-key {
+      color: #60a5fa;
+    }
+
+    .json-string {
+      color: #a78bfa;
+    }
+
+    .json-number {
+      color: #f472b6;
+    }
+
+    .json-boolean {
+      color: #fbbf24;
+    }
+  </style>
 
   <script>
     const inputEl = document.getElementById('input');
     const outputEl = document.getElementById('output');
-    const statusDot = document.getElementById('statusDot');
-    const statusText = document.getElementById('statusText');
+    const tokensView = document.getElementById('tokens-view');
+    const astView = document.getElementById('ast-view');
+    const newAstView = document.getElementById('newast-view');
+    const statusArea = document.getElementById('status-area');
 
-    function setStatus(text, isActive = true) {
-      statusText.textContent = text;
-      statusDot.className = 'status-dot' + (isActive ? ' active' : '');
+    let currentResult = null;
+
+    const examples = {
+      1: '(add 5 (subtract 4 2))',
+      2: '(add 2 (subtract (add 4 2) (subtract 10 5)))',
+      3: '(concat "Hello" " " "World" "!")',
+      4: '(add 1 (subtract 10 (add 2 (subtract 4 (add 2 100)))))'
+    };
+
+    function loadExample(id) {
+      inputEl.value = examples[id];
+      inputEl.focus();
+      statusArea.innerHTML = '';
+      compile();
     }
 
-    async function compile() {
-      const code = inputEl.value.trim();
-      
-      if (!code) {
-        outputEl.innerHTML = '<div class="placeholder">Please enter some code</div>';
-        setStatus('Waiting for input', false);
-        return;
+    function switchTab(tab) {
+      ['output', 'tokens', 'ast', 'newast'].forEach(t => {
+        document.querySelector(`.tab-btn[onclick="switchTab('${t}')"]`).classList.toggle('active', t === tab);
+      });
+
+      outputEl.style.display = tab === 'output' ? 'block' : 'none';
+      tokensView.style.display = tab === 'tokens' ? 'block' : 'none';
+      astView.style.display = tab === 'ast' ? 'block' : 'none';
+      newAstView.style.display = tab === 'newast' ? 'block' : 'none';
+    }
+
+    // Safe HTML escaping to prevent XSS
+    function escapeHtml(unsafe) {
+      return unsafe
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    function formatJSON(obj) {
+      const json = JSON.stringify(obj, null, 2);
+      return escapeHtml(json)
+        .replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, function (match) {
+          let cls = 'json-number';
+          if (/^"/.test(match)) {
+            if (/:$/.test(match)) {
+              cls = 'json-key';
+            } else {
+              cls = 'json-string';
+            }
+          } else if (/true|false/.test(match)) {
+            cls = 'json-boolean';
+          } else if (/null/.test(match)) {
+            cls = 'json-null';
+          }
+          return '<span class="' + cls + '">' + match + '</span>';
+        });
+    }
+
+    function setStatus(type, msg) {
+      if (type === 'loading') {
+        statusArea.innerHTML = `<div class="status-indicator status-loading"><div class="loader"></div>Compiling...</div>`;
+      } else if (type === 'success') {
+        statusArea.innerHTML = `<div class="status-indicator status-success">Build Successful</div>`;
+      } else if (type === 'error') {
+        statusArea.innerHTML = `<div class="status-indicator status-error">Build Failed</div>`;
+      } else {
+        statusArea.innerHTML = '';
       }
+    }
 
-      setStatus('Compiling...', true);
-      outputEl.innerHTML = '<span class="placeholder">Compiling...</span>';
-
-      try {
-        const response = await fetch(`/api/compiler?code=${encodeURIComponent(code)}`);
-        const data = await response.json();
-        
-        if (data.success) {
-          outputEl.innerHTML = `<span class="success">${escapeHtml(data.output)}</span>`;
-          setStatus('Success', true);
-        } else {
-          outputEl.innerHTML = `<div class="error">Error: ${escapeHtml(data.error)}</div>`;
-          setStatus('Error', false);
-        }
-      } catch (error) {
-        outputEl.innerHTML = `<div class="error">Network Error: ${escapeHtml(error.message)}</div>`;
-        setStatus('Error', false);
+    function copyOutput() {
+      // Copy current visible tab content
+      // Simply copy global output for now as user likely wants the C code
+      const text = currentResult?.output || '';
+      if (text) {
+        navigator.clipboard.writeText(text);
+        const btn = document.querySelector('.output-panel .btn-ghost');
+        const originalText = btn.innerText;
+        btn.innerText = 'Copied!';
+        setTimeout(() => btn.innerText = originalText, 1500);
       }
     }
 
     function clearInput() {
       inputEl.value = '';
-      outputEl.innerHTML = '<div class="placeholder">Waiting for input...</div>';
-      setStatus('Cleared', false);
+      outputEl.innerHTML = '<span class="placeholder">// Transpiled code will appear here...</span>';
+      tokensView.innerHTML = '';
+      astView.innerHTML = '';
+      newAstView.innerHTML = '';
+      statusArea.innerHTML = '';
+      currentResult = null;
       inputEl.focus();
     }
 
-    function escapeHtml(text) {
-      const div = document.createElement('div');
-      div.textContent = text;
-      return div.innerHTML;
+    async function compile() {
+      const code = inputEl.value.trim();
+      if (!code) {
+        setStatus('error', 'Empty');
+        return;
+      }
+
+      setStatus('loading');
+
+      try {
+        await new Promise(r => setTimeout(r, 400));
+
+        const response = await fetch(`/api/compiler?code=${encodeURIComponent(code)}`);
+        const data = await response.json();
+
+        if (data.success) {
+          currentResult = data;
+
+          // Output Tab
+          const safelyEscaped = escapeHtml(data.output);
+          const highlighted = safelyEscaped
+            .replace(/\b(add|subtract|concat)\b/g, '<span style="color:#60a5fa">$1</span>')
+            .replace(/\b(\d+)\b/g, '<span style="color:#f472b6">$1</span>')
+            .replace(/(&quot;.*?&quot;)/g, '<span style="color:#a78bfa">$1</span>');
+          outputEl.innerHTML = `<pre class="success-msg" style="margin:0">${highlighted}</pre>`;
+
+          // Other Tabs
+          tokensView.innerHTML = `<pre>${formatJSON(data.tokens)}</pre>`;
+          astView.innerHTML = `<pre>${formatJSON(data.ast)}</pre`;
+          newAstView.innerHTML = `<pre>${formatJSON(data.newAst)}</pre>`;
+
+          setStatus('success');
+        } else {
+          outputEl.innerHTML = `<div class="error-msg">Error: ${escapeHtml(data.error)}</div>`;
+          setStatus('error');
+        }
+      } catch (err) {
+        outputEl.innerHTML = `<div class="error-msg">Network Error: Is the server running?</div>`;
+        setStatus('error');
+      }
     }
 
-    // Compile on Ctrl+Enter
+    // Ctrl/Cmd + Enter to Compile
     inputEl.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+      if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
         compile();
       }
     });
 
-    // Auto-compile on input (optional)
-    let compileTimeout;
-    inputEl.addEventListener('input', () => {
-      clearTimeout(compileTimeout);
-      setStatus('Typing...', true);
-      compileTimeout = setTimeout(compile, 1000);
-    });
-
-    // Focus input on load
-    inputEl.focus();
+    // Default example load
+    window.onload = () => {
+      loadExample(2);
+    };
   </script>
 </body>
+
 </html>

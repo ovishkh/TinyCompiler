@@ -1,4 +1,4 @@
-const { compiler } = require('../TinyCompiler');
+const { debugCompiler } = require('../TinyCompiler');
 
 module.exports = (req, res) => {
   // CORS headers
@@ -25,23 +25,23 @@ module.exports = (req, res) => {
     }
 
     if (!code) {
-      return res.status(400).json({ 
+      return res.status(400).json({
         error: 'No code provided',
         usage: 'GET /api/compiler?code=(add 1 2) or POST with {"code": "(add 1 2)"}',
-        success: false 
+        success: false
       });
     }
 
-    const output = compiler(code);
-    res.status(200).json({ 
-      input: code, 
-      output: output,
-      success: true 
+    const result = debugCompiler(code);
+    res.status(200).json({
+      input: code,
+      ...result,
+      success: true
     });
   } catch (error) {
-    res.status(400).json({ 
+    res.status(400).json({
       error: error.message || 'Compilation error',
-      success: false 
+      success: false
     });
   }
 };

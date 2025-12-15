@@ -601,7 +601,7 @@ To deepen your compiler knowledge, explore:
 - 📖 **API Docs:** [GitHub Wiki](https://github.com/ovishkh/TinyCompiler/wiki)
 
 ### Related Resources
-- [The Super Tiny Compiler](https://github.com/jamiebuilds/the-super-tiny-compiler) - Original by James Kyle
+
 - [Crafting Interpreters](https://craftinginterpreters.com/) - Interactive guide
 - [Engineering a Compiler](https://www.elsevier.com/books/engineering-a-compiler/cooper/978-0-12-815412-0) - Advanced reading
 
@@ -614,23 +614,69 @@ To deepen your compiler knowledge, explore:
 
 ---
 
-## 📋 License
+## 🧠 The "Tiny" Internals (How it works)
 
-MIT License © 2025 Ovi Shekh
+This section contains the deep-dive explanation that was originally embedded in the source code.
 
-See [LICENSE](LICENSE) file for details.
+### 1. The Tokenizer (Lexical Analysis)
+We start by accepting an input string of code, and we're going to break it down into an array of tokens.
+
+```javascript
+// (add 2 (subtract 4 2))
+//    ^^^
+//    Name token
+```
+
+We loop through the input string character by character:
+1.  **Parentheses**: We check for `(` and `)`.
+2.  **Whitespace**: We check for spaces, but we don't store them as tokens. We just skip them.
+3.  **Numbers**: We capture sequences of numbers `[0-9]` as a single token.
+4.  **Strings**: We capture anything between `"` quotes.
+5.  **Names**: We capture sequences of letters `[a-z]` as identifiers (like `add` or `subtract`).
+
+### 2. The Parser (Syntactic Analysis)
+Parsing converts the flat list of tokens into a tree structure (AST).
+
+**The Challenge**: How do we handle nested calls like `(add 2 (subtract 4 2))`?
+**The Solution**: Recursion.
+
+One main function `walk()` does the heavy lifting:
+*   It looks at the current token.
+*   If it's a `number`, it returns a `NumberLiteral` node.
+*   If it's a `string`, it returns a `StringLiteral` node.
+*   If it's a `(`, it knows it's a `CallExpression`.
+    *   It grabs the name (e.g., `add`).
+    *   It then calls `walk()` *recursively* to find the arguments.
+    *   This recursion continues until it hits a `)`, at which point it finishes the node and returns it.
+
+### 3. The Transformer (AST Transformation)
+This is where the magic happens. We want to turn LISP-like code into C-like code.
+
+*   **LISP**: `(add 2 2)` -> Function name inside.
+*   **C**: `add(2, 2)` -> Function name outside.
+
+We use a **Visitor Pattern** to walk through the LISP AST. When we visit a `CallExpression` node, we build a *new* node for our C-AST:
+*   We create a `CallExpression` with a `callee` property (the identifier `add`).
+*   We put the parameters into an `arguments` array.
+*   **Context Hack**: We pass a "context" array down the tree so that children nodes can push themselves into their parent's `arguments` list.
+
+### 4. The Code Generator
+The final step is effectively a big switch statement that prints strings.
+
+*   `Program`: Iterate through each expression and add a newline.
+*   `ExpressionStatement`: Print the expression and add a `;`.
+*   `CallExpression`: Print the `callee`, literal `(`, the `arguments` joined by comma, and `)`.
+*   `Identifier`: Print the name.
+*   `NumberLiteral`: Print the value.
 
 ---
 
-## 🤝 Support & Contact
+## 📄 License
+**MIT License**
 
-- **Issues & Bugs:** [GitHub Issues](https://github.com/ovishkh/TinyCompiler/issues)
-- **Discussions:** [GitHub Discussions](https://github.com/ovishkh/TinyCompiler/discussions)
-- **Email:** hi@ovishekh.com
-- **Website:** [ovishekh.com](https://ovishekh.com)
+Copyright (c) 2025 Ovi Shekh
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ---
-
-**Last Updated:** November 21, 2025
-
 **Made with ❤️ by Ovi Shekh**
